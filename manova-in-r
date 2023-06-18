@@ -1,4 +1,4 @@
-#input data
+#input data 
 data1 = read.delim ("clipboard")
 View(data1)
 summary(data1)
