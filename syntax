@@ -1,0 +1,109 @@
+#input data
+data1 = read.delim ("clipboard")
+View(data1)
+summary(data1)
+
+#1. uji outlier 
+outlier=data1[,2:3]
+outlier
+library(MVN)
+hasiloutlier = mvn(outlier, multivariateOutlierMethod = "adj",
+            showNewData = TRUE)
+
+#membuang data outlier
+nooutlier=hasiloutlier$newData
+nooutlier
+
+##uji normalitas
+norm = mvn(nooutlier, mvnTest = "hz")
+norm
+
+normawal = mvn(nooutlier, mvnTest = "hz")
+
+##uji homogen
+datadata = data1[1:24,1:3]
+datadata
+homogen= bartlett.test(datadata$P1, datadata$Metode)
+homogen
+homogen2 = bartlett.test(datadata$P2,datadata$Metode)
+homogen2
+
+##uji manova
+summary(manova(cbind(P1,P2)~Metode,data=datadata),
+        test = "Hotelling-Lawley")
+summary(manova(cbind(P1,P2)~Metode,data=datadata),
+        test = "Pillai")
+summary(manova(cbind(P1,P2)~Metode,data=datadata),
+        test = "Wilks")
+summary(manova(cbind(P1,P2)~Metode,data=datadata),
+        test = "Roy")
+
+
+
+## NOMOR 2
+#input data
+data2 <-read.delim("clipboard")
+datadata2 <-(data2[,3:11])
+View(datadata2)
+
+# hapus missing data
+a = summary(datadata2)
+    dataily = na.omit(datadata2)
+b = summary(dataily)
+
+# Uji normalitas tanpa missing data
+norm2 = mvn(data = dataily, mvnTest = "hz")
+norm2
+
+# Melihat korelasi data
+a = cor(dataily)
+View(cor(dataily))
+
+# uji Kecukupan Data dan Kelayakan Variabel
+library(psych)
+KMO(dataily)
+
+#uji Korelasi antar variabel (uji Bartlett)
+uji_Bartlett <- function(x)
+{
+  method <- "Bartlett's test of sphericity"
+  data.name <- deparse(substitute(x))
+  x <- subset(x, complete.cases(x)) 
+  n <- nrow(x)
+  p <- ncol(x)
+  chisq <- (1-n+(2*p+5)/6)*log(det(cor(x)))
+  df <- p*(p-1)/2
+  p.value <- pchisq(chisq, df, lower.tail=FALSE)
+  names(chisq) <- "Khi-squared"
+  names(df) <- "df"
+  return(structure(list(statistic=chisq, parameter=df, p.value=p.value,
+                        method=method, data.name=data.name), class="htest"))
+}
+uji_Bartlett(dataily)
+
+#Penentuan banyaknya faktor
+R <- cor(dataily)
+eigen<- eigen(R)
+eigen$values
+
+#analisis faktor
+library(GPArotation)
+?`GPArotation-package`
+#tanpa rotasi
+factors_none<-fa(dataily, nfactors = 2, rotate="none")
+factors_none
+
+#rotasi equamax
+factors_equamax <- fa(dataily, nfactors = 2, 
+                      rotate="equamax")
+factors_equamax
+
+# Skor untuk masing-masing faktor
+sw.scores <-factors_equamax$scores 
+sw.scores
+sw.scoress <-factors_none$scores
+View(sw.scoress)
+
+# Plot komponen yang terbentuk
+plot(factors_equamax$values, type="b",
+     ylab="Eigen values",xlab="Banyaknya komponen yang terbentuk")
